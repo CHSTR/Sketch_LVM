@@ -79,6 +79,9 @@ python -m generate_images --output_file=name_of_output_file
 ```
 This code will generate the images of the retrieval results in the `save_images` folder.
 
+**When the data set is in a format like Sketchy (folders photo and sketch), we should leave `--x_train` and `--x_test` empty.**
+
+
 ## Bibtex
 
 Please cite our work if you found it useful. Thanks.

@@ -113,7 +113,6 @@ if __name__ == '__main__':
         max_labels = all_labels_images[0][max_indices]
 
         top_images_path = []
-        # Supongamos que max_indices contiene los índices que deseas usar
         for i in range(len(max_indices)):
             tmp = []
             for j in range(10):
