@@ -37,7 +37,7 @@ Cross-category FG-ZS-SBIR. A common (photo-sketch) learnable visual prompt share
 An example command to run the code is given below:
 ```shell
 $ cd Sketch_LVM
-$ python -m experiments.LN_prompt --exp_name=LN_prompt --n_prompts=3 --clip_LN_lr=1e-6 --prompt_lr=1e-4 --batch_size=192 --workers=128
+$ python -m experiments.LN_prompt --exp_name=LN_prompt --n_prompts=3 --clip_LN_lr=1e-6 --prompt_lr=1e-4 --batch_size=192 --workers=128 --model_type=two_encoder
 ```
 
 ## Qualitative Results
@@ -57,6 +57,27 @@ Quantitative results of our method against a few SOTAs.
 
 
 The code for cross-category Fine-Grained ZS-SBIR will be uploaded in some time.
+
+## Code for SBIR, mAP and for image generation
+For getting the retrieval results, we can use the next code:
+```shell
+python -m SBIR --model_type=two_encoder --model=last.ckpt --output_file=name_of_output_file
+```
+This code will generate two files in the `results` folder:
+- `name_of_output_file.txt` with the retrieval results.
+- `name_of_output_file_images.txt` with the images of the retrieval results.
+
+For getting the mAP, we can use the next code:
+```shell
+python mAP.py 
+```
+This code will show the mAP for the retrieval results in the `results` folder.
+
+Finally, for generating the images of the retrieval results, we can use the next code:
+```shell
+python -m generate_images --output_file=name_of_output_file
+```
+This code will generate the images of the retrieval results in the `save_images` folder.
 
 ## Bibtex
 
