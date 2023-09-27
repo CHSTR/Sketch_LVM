@@ -23,8 +23,13 @@ class Model(pl.LightningModule):
         super().__init__()
 
         self.opts = opts
-        self.clip, _ = clip.load('ViT-B/32', device=self.device)
-        self.clip.apply(freeze_all_but_bn)
+
+        self.clip_img, _ = clip.load('ViT-B/32', device=self.device)
+        self.clip_img.apply(freeze_all_but_bn)
+
+        if self.opts.model_type == 'two_encoder':
+            self.clip_sk, _ = clip.load('ViT-B/32', device=self.device)
+            self.clip_sk.apply(freeze_all_but_bn)
 
         # Prompt Engineering
         self.sk_prompt = nn.Parameter(torch.randn(self.opts.n_prompts, self.opts.prompt_dim))
@@ -37,18 +42,28 @@ class Model(pl.LightningModule):
         self.best_metric = -1e3
 
     def configure_optimizers(self):
+        if self.opts.model_type == 'one_encoder':
+            model_params = list(self.clip_img.parameters())
+        else:
+            model_params = list(self.clip_img.parameters()) + list(self.clip_sk.parameters())
+
         optimizer = torch.optim.Adam([
-            {'params': self.clip.parameters(), 'lr': self.opts.clip_LN_lr},
+            {'params': model_params, 'lr': self.opts.clip_LN_lr},
             {'params': [self.sk_prompt] + [self.img_prompt], 'lr': self.opts.prompt_lr}])
         return optimizer
 
     def forward(self, data, dtype='image'):
         if dtype == 'image':
-            feat = self.clip.encode_image(
+            feat = self.clip_img.encode_image(
                 data, self.img_prompt.expand(data.shape[0], -1, -1))
         else:
-            feat = self.clip.encode_image(
-                data, self.sk_prompt.expand(data.shape[0], -1, -1))
+            # si el modelo es de dos encoders, se usa el clip_sk
+            if self.opts.model_type == 'two_encoder':
+                feat = self.clip_sk.encode_image(
+                    data, self.sk_prompt.expand(data.shape[0], -1, -1))
+            else:
+                feat = self.clip_img.encode_image(
+                    data, self.sk_prompt.expand(data.shape[0], -1, -1))
         return feat
 
     def training_step(self, batch, batch_idx):
@@ -79,15 +94,18 @@ class Model(pl.LightningModule):
         gallery_feat_all = torch.cat([val_step_outputs[i][1] for i in range(Len)])
         all_category = np.array(sum([list(val_step_outputs[i][2]) for i in range(Len)], []))
 
-
+        #print("all_category", all_category)
         ## mAP category-level SBIR Metrics
         gallery = gallery_feat_all
         ap = torch.zeros(len(query_feat_all))
         for idx, sk_feat in enumerate(query_feat_all):
             category = all_category[idx]
+            #print("category", category)
             distance = -1*self.distance_fn(sk_feat.unsqueeze(0), gallery)
             target = torch.zeros(len(gallery), dtype=torch.bool)
             target[np.where(all_category == category)] = True
+            #print("target", target)
+            #print("distance", distance)
             ap[idx] = retrieval_average_precision(distance.cpu(), target.cpu())
         
         mAP = torch.mean(ap)

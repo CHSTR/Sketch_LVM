@@ -16,7 +16,7 @@ if __name__ == '__main__':
     train_dataset = Sketchy(opts, dataset_transforms, mode='train', return_orig=False)
     val_dataset = Sketchy(opts, dataset_transforms, mode='val', used_cat=train_dataset.all_categories, return_orig=False)
 
-    train_loader = DataLoader(dataset=train_dataset, batch_size=opts.batch_size, num_workers=opts.workers)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=opts.batch_size, num_workers=opts.workers, shuffle=True)
     val_loader = DataLoader(dataset=val_dataset, batch_size=opts.batch_size, num_workers=opts.workers)
 
     logger = TensorBoardLogger('tb_logs', name=opts.exp_name)
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         mode='min',
         save_last=True)
 
-    ckpt_path = os.path.join('saved_models', opts.exp_name, 'last.ckpt')
+    ckpt_path = os.path.join('saved_models', opts.exp_name, 'two_encoders.ckpt')
     if not os.path.exists(ckpt_path):
         ckpt_path = None
     else:
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         logger=logger,
         # val_check_interval=10, 
         # accumulate_grad_batches=1,
-        check_val_every_n_epoch=5,
+        check_val_every_n_epoch=2,
         resume_from_checkpoint=ckpt_path,
         callbacks=[checkpoint_callback]
     )
