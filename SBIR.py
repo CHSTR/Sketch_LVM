@@ -22,13 +22,10 @@ from tqdm import tqdm
 if __name__ == '__main__':
     dataset_transforms = Ecommerce.data_transform(opts)
 
-    # train_dataset = Sketchy(opts, dataset_transforms, mode='train', return_orig=False)
-    #val_dataset = Ecommerce(opts, dataset_transforms, mode='val', used_cat=None, return_orig=False)
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    image_file = opts.image_file #'/home/chr/Sketch_LVM_ecommerce/dir/flickr15/dataset.txt' #'/media/chr/Nuevo vol/ecommerce/ecommerce/image_test.txt'
-    sketch_file = opts.sketch_file #'/home/chr/Sketch_LVM_ecommerce/dir/flickr15/query_class.txt' #'/media/chr/Nuevo vol/ecommerce/ecommerce/sketches_valid/sk_classification.txt'
+    image_file = opts.image_file 
+    sketch_file = opts.sketch_file 
 
 
     image_dataset = Ecommerce(image_file, opts=opts, transform=dataset_transforms)
@@ -67,7 +64,7 @@ if __name__ == '__main__':
     archivo_salida = path_results + opts.output_file #"original_model_flickr15"
 
     with torch.no_grad():
-        # Generar embeddings para los sketches
+        # Genera los embeddings para los sketches
         print("Generando embeddings para los sketches")
         for (sketch, s_label, path) in tqdm(sketches_loader):
             sketch_feat = model(sketch.to(device), dtype='sketch')
@@ -79,7 +76,6 @@ if __name__ == '__main__':
         sketch_labels = torch.cat(sketch_labels, dim=0) # [batch_size] -> [n_sketches]
         sketch_paths = [path for paths in sketch_paths for path in paths]
 
-    # Bucle para generar los rankings
     distance_values = []
     labels_images = []
     images_path = []
@@ -102,14 +98,14 @@ if __name__ == '__main__':
         all_images_path = images_path
 
 
-        # Convertir las listas en tensores
+        # Convierte las listas en tensores
         all_query_distance = torch.cat(distance_values, dim=1).to(device) # [n_sketches, total_images]
         all_labels_images = torch.cat(labels_images, dim=1).to(device) # [1, total_images]
 
-        # Obtener los valores máximos (mas cercanos a 0) y sus índices
+        # Obtiene los valores máximos (mas cercanos a 0) y sus índices
         max_values, max_indices = torch.topk(all_query_distance, top_k, dim=1, largest=True, sorted=True) # [n_sketches, top_k]
 
-        # Obtener los labels de las imágenes con los valores más altos
+        # Obtiene los labels de las imágenes con los valores más altos
         max_labels = all_labels_images[0][max_indices]
 
         top_images_path = []

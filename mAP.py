@@ -56,13 +56,10 @@ if __name__ == '__main__':
         its.append(it)
         mAPs.append(dmAP[it])
 
-    # Crear el gráfico de barras
     plt.bar(names, mAPs, color=colors)
     
     # Agregar una barra adicional en el medio con un valor de mAP de 0
     plt.bar(0.5, 0, color='white', width=0.5)
-    
-    # Configurar las etiquetas de las barras
     plt.title('mAP')
 
     # Agregar el valor de mAP dentro de cada barra
@@ -70,5 +67,3 @@ if __name__ == '__main__':
         plt.text(i, mAP, f'{mAP:.2f}', ha='center', va='bottom')
     
     plt.show()
-
-    # ppganda - 
